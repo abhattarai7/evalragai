@@ -1,13 +1,13 @@
 import streamlit as st
 import pymupdf
 
-from embeddings import embed_chunks
-from search import upload_chunks
+from embeddings import embed_chunks, embed_query
+from search import upload_chunks, search_chunks
 
 def extract_text_from_pdf(uploaded_file):
     pdfbytes = uploaded_file.read()
     document = pymupdf.open(
-        stream = pdfbytes,
+        stream = pdfbytes,  
         filetype= "pdf"
     )
     text = ""
@@ -63,6 +63,19 @@ if uploaded_file is not None:
     upload_results = upload_chunks(chunks, embeddings)
 
     st.success("Document indexed successfully in Azure AI Search.")
+
+    # Add the question/retrieval code here
+    st.subheader("Ask a Question")
+    question = st.text_input("Ask a question about the document")
+
+    if question:
+        query_embedding = embed_query(question)
+        search_results = search_chunks(query_embedding)
+
+        st.subheader("Retrieved evidence")
+
+        for result in search_results:
+            st.write(result["content"])
 
     st.write("Number of chunks:", len(chunks))
     st.write("Number of embeddings:", len(embeddings))

@@ -1,3 +1,4 @@
+from azure.search.documents.models import VectorizedQuery
 from azure.identity import DefaultAzureCredential
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents import SearchClient
@@ -59,6 +60,12 @@ vector_search = VectorSearch(
     ]
 )
 
+try:
+    index_client.delete_index(index_name)
+    print("Deleting existing index:", index_name)
+except Exception:
+    pass
+
 index = SearchIndex(
     name=index_name,
     fields=fields,
@@ -84,11 +91,30 @@ def upload_chunks(chunks, embeddings):
             "content": chunks[i],
             "contentVector": embeddings[i]
         }
-        
-    documents.append(document)
+
+        documents.append(document)
 
     result = search_client.upload_documents(documents=documents)
 
     return result
 
-    
+def search_chunks(query_embedding, top_k=1):
+    search_client = SearchClient(
+        endpoint=search_endpoint,
+        index_name=index_name,
+        credential=credential
+    )
+
+    vector_query = VectorizedQuery(
+        vector=query_embedding,
+        k_nearest_neighbors=top_k,
+        fields="contentVector"
+    )
+
+    results = search_client.search(
+        search_text=None,
+        vector_queries=[vector_query],
+        select=["id", "content"]
+    )
+
+    return list(results)
