@@ -3,6 +3,7 @@ import pymupdf
 
 from embeddings import embed_chunks, embed_query
 from search import upload_chunks, search_chunks
+from generation import generate_answer
 
 def extract_text_from_pdf(uploaded_file):
     pdfbytes = uploaded_file.read()
@@ -71,6 +72,10 @@ if uploaded_file is not None:
     if question:
         query_embedding = embed_query(question)
         search_results = search_chunks(query_embedding)
+        answer = generate_answer(question, search_results)
+
+        st.subheader("AI Answer")
+        st.write(answer)
 
         st.subheader("Retrieved evidence")
 
