@@ -1,5 +1,6 @@
 import streamlit as st
 import pymupdf
+import hashlib
 
 from embeddings import embed_chunks, embed_query
 from search import upload_chunks, search_chunks
@@ -52,16 +53,36 @@ uploaded_file = st.file_uploader(
     type = ["pdf", "text"]
 )
 
+if "document_id" not in st.session_state:
+    st.session_state.document_id = None
+
 if uploaded_file is not None:
     st.success("Document uploaded successfully.")
     st.write("File name", uploaded_file.name)
     st.write("File type", uploaded_file.type)
     st.write("File size", uploaded_file.size, "bytes")
+    pdf_bytes = uploaded_file.getvalue()    
+    current_document_id = hashlib.sha256(pdf_bytes).hexdigest()
 
-    extracted_text = extract_text_from_pdf(uploaded_file)
-    chunks = chunk_text(extracted_text)
-    embeddings = embed_chunks(chunks)
-    upload_results = upload_chunks(chunks, embeddings)
+    if st.session_state.document_id != current_document_id:
+        st.write("Processing new document...")
+        extracted_text = extract_text_from_pdf(uploaded_file)
+        chunks = chunk_text(extracted_text)
+        embeddings = embed_chunks(chunks)
+        upload_results = upload_chunks(chunks, embeddings)
+
+        if not all(result.succeeded for result in upload_results):
+            st.error("Some chunks failed to index.")
+            st.stop()
+
+        st.session_state.document_id = current_document_id
+        st.session_state.extracted_text = extracted_text
+        st.session_state.chunks = chunks
+        st.session_state.embeddings = embeddings
+
+    extracted_text = st.session_state.extracted_text
+    chunks = st.session_state.chunks
+    embeddings = st.session_state.embeddings
 
     st.success("Document indexed successfully in Azure AI Search.")
 

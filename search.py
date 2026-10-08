@@ -60,21 +60,11 @@ vector_search = VectorSearch(
     ]
 )
 
-try:
-    index_client.delete_index(index_name)
-    print("Deleting existing index:", index_name)
-except Exception:
-    pass
-
 index = SearchIndex(
     name=index_name,
     fields=fields,
     vector_search=vector_search
 )
-
-result = index_client.create_or_update_index(index)
-
-print("Created index:", result.name)
 
 def upload_chunks(chunks, embeddings):
     search_client = SearchClient(
