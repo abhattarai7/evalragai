@@ -5,6 +5,7 @@ import hashlib
 from embeddings import embed_chunks, embed_query
 from search import upload_chunks, search_chunks
 from generation import generate_answer
+from evaluation import evaluate_groundedness
 
 def extract_text_from_pdf(uploaded_file):
     pdfbytes = uploaded_file.read()
@@ -94,9 +95,13 @@ if uploaded_file is not None:
         query_embedding = embed_query(question)
         search_results = search_chunks(query_embedding)
         answer = generate_answer(question, search_results)
+        groundedness = evaluate_groundedness(question, answer, search_results)
 
         st.subheader("AI Answer")
         st.write(answer)
+
+        st.subheader("AI Evaluation")
+        st.write("Groundedness:", groundedness)
 
         st.subheader("Retrieved evidence")
 
