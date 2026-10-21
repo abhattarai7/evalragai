@@ -22,7 +22,25 @@ def evaluate_groundedness(question, answer, search_results):
             f"Document context:\n{context}\n\n"
             f"Question:\n{question}\n\n"
             f"Answer:\n{answer}"
-),
+        ),
+        max_output_tokens=300
+    )
+
+    return response.output_text.strip()
+
+def evaluate_relevance(question, answer):
+    response = client.responses.create(
+        model="gpt-5.4-mini-1",
+        instructions=(
+            "You are an AI evaluator. "
+            "Determine whether the answer addresses the user's question. "
+            "Return exactly one label: RELEVANT, PARTIALLY_RELEVANT, or IRRELEVANT. "
+            "Return RELEVANT if the answer directly addresses the question. "
+            "Return PARTIALLY_RELEVANT if the answer addresses only part of the question. "
+            "Return IRRELEVANT if the answer does not address the question. "
+            "Return only the label."
+        ),
+        input=f"Question:\n{question}\n\nAnswer:\n{answer}",
         max_output_tokens=300
     )
 
@@ -49,3 +67,18 @@ if __name__ == "__main__":
         "Refusal:",
         evaluate_groundedness(salary_question, refusal_answer, test_results)
     )
+
+    print("Relevant:", evaluate_relevance(
+        vacation_question,
+        correct_answer
+    ))
+
+    print("Irrelevant:", evaluate_relevance(
+        vacation_question,
+        "Employees must use the corporate VPN when working remotely."
+    ))
+
+    print("Partially relevant:", evaluate_relevance(
+        "How many vacation days do employees receive, and how many can carry over?",
+        "Employees receive 15 paid vacation days."
+    ))
