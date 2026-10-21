@@ -1,6 +1,7 @@
 import streamlit as st
 import pymupdf
 import hashlib
+import time
 
 from embeddings import embed_chunks, embed_query
 from search import upload_chunks, search_chunks
@@ -92,11 +93,15 @@ if uploaded_file is not None:
     question = st.text_input("Ask a question about the document")
 
     if question:
+        start_time = time.perf_counter()
+
         query_embedding = embed_query(question)
         search_results = search_chunks(query_embedding)
         answer = generate_answer(question, search_results)
         groundedness = evaluate_groundedness(question, answer, search_results)
         relevance = evaluate_relevance(question, answer)
+
+        latency = time.perf_counter() - start_time
 
         st.subheader("AI Answer")
         st.write(answer)
@@ -104,6 +109,9 @@ if uploaded_file is not None:
         st.subheader("AI Evaluation")
         st.write("Groundedness:", groundedness)
         st.write("Relevance:", relevance)
+
+        st.subheader("Performance")
+        st.write("Latency:", round(latency, 2), "seconds")
 
         st.subheader("Retrieved evidence")
 
