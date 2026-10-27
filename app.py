@@ -6,7 +6,8 @@ import time
 from embeddings import embed_chunks, embed_query
 from search import upload_chunks, search_chunks
 from generation import generate_answer
-from evaluation import evaluate_groundedness, evaluate_relevance
+from evaluation import evaluate_groundedness, evaluate_relevance, classify_hallucination_risk
+
 
 def extract_text_from_pdf(uploaded_file):
     pdfbytes = uploaded_file.read()
@@ -27,11 +28,13 @@ def chunk_text(text, chunk_size=800, overlap=200):
     start = 0
 
     while start < len(text):
-        end = start + chunk_size
-        chunk = text[start:end]
-        chunks.append(chunk)
+            end = min(start + chunk_size, len(text))
+            chunks.append(text[start:end])
 
-        start = end - overlap
+            if end == len(text):
+                break
+
+            start = end - overlap
 
     return chunks
 
@@ -71,7 +74,7 @@ if uploaded_file is not None:
         extracted_text = extract_text_from_pdf(uploaded_file)
         chunks = chunk_text(extracted_text)
         embeddings = embed_chunks(chunks)
-        upload_results = upload_chunks(chunks, embeddings)
+        upload_results = upload_chunks(chunks, embeddings, current_document_id)
 
         if not all(result.succeeded for result in upload_results):
             st.error("Some chunks failed to index.")
@@ -96,10 +99,11 @@ if uploaded_file is not None:
         start_time = time.perf_counter()
 
         query_embedding = embed_query(question)
-        search_results = search_chunks(query_embedding)
+        search_results = search_chunks(query_embedding, current_document_id)
         answer = generate_answer(question, search_results)
         groundedness = evaluate_groundedness(question, answer, search_results)
         relevance = evaluate_relevance(question, answer)
+        hallucination_risk = classify_hallucination_risk(groundedness)
 
         latency = time.perf_counter() - start_time
 
@@ -109,6 +113,7 @@ if uploaded_file is not None:
         st.subheader("AI Evaluation")
         st.write("Groundedness:", groundedness)
         st.write("Relevance:", relevance)
+        st.write("Hallucination Risk:", hallucination_risk)
 
         st.subheader("Performance")
         st.write("Latency:", round(latency, 2), "seconds")

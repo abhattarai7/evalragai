@@ -46,6 +46,16 @@ def evaluate_relevance(question, answer):
 
     return response.output_text.strip()
 
+def classify_hallucination_risk(groundedness):
+    if groundedness == "SUPPORTED":
+        return "LOW"
+    elif groundedness == "UNSUPPORTED":
+        return "HIGH"
+    elif groundedness == "INSUFFICIENT_INFORMATION":
+        return "LOW"
+    else:
+        return "UNKNOWN"
+
 if __name__ == "__main__":
     test_results = [
         {

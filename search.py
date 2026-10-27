@@ -30,6 +30,12 @@ fields = [
         key=True
     ),
 
+    SimpleField(
+        name="document_id",
+        type=SearchFieldDataType.String,
+        filterable=True
+    ),
+
     SearchableField(
         name="content",
         type=SearchFieldDataType.String
@@ -52,7 +58,7 @@ vector_search = VectorSearch(
             name="hnsw-config"
         )
     ],
-    profiles=[
+    profiles=[  
         VectorSearchProfile(
             name="vector-profile",
             algorithm_configuration_name="hnsw-config"
@@ -66,7 +72,7 @@ index = SearchIndex(
     vector_search=vector_search
 )
 
-def upload_chunks(chunks, embeddings):
+def upload_chunks(chunks, embeddings, document_id):
     search_client = SearchClient(
         endpoint=search_endpoint,
         index_name=index_name,
@@ -76,8 +82,9 @@ def upload_chunks(chunks, embeddings):
     documents = []
 
     for i in range(len(chunks)):
-        document = {   
-            "id": f"chunk-{i}",
+        document = {
+            "id": f"{document_id}-chunk-{i}",
+            "document_id": document_id,
             "content": chunks[i],
             "contentVector": embeddings[i]
         }
@@ -88,7 +95,7 @@ def upload_chunks(chunks, embeddings):
 
     return result
 
-def search_chunks(query_embedding, top_k=1):
+def search_chunks(query_embedding, document_id, top_k=3):
     search_client = SearchClient(
         endpoint=search_endpoint,
         index_name=index_name,
@@ -104,7 +111,24 @@ def search_chunks(query_embedding, top_k=1):
     results = search_client.search(
         search_text=None,
         vector_queries=[vector_query],
-        select=["id", "content"]
+        filter=f"document_id eq '{document_id}'",
+        select=["id", "content", "document_id"]
     )
 
     return list(results)
+
+if __name__ == "__main__":
+    existing_index = index_client.get_index(index_name)
+
+    if not any(field.name == "document_id" for field in existing_index.fields):
+        existing_index.fields.append(
+            SimpleField(
+                name="document_id",
+                type=SearchFieldDataType.String,
+                filterable=True
+            )
+        )
+        index_client.create_or_update_index(existing_index)
+        print("Index updated successfully.")
+    else:
+        print("document_id field already exists.")
