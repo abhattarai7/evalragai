@@ -31,4 +31,6 @@ def generate_answer(question, search_results):
         max_output_tokens=500
     )
 
-    return response.output_text
+    usage = response.usage
+
+    return response.output_text, usage

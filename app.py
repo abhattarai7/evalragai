@@ -100,7 +100,7 @@ if uploaded_file is not None:
 
         query_embedding = embed_query(question)
         search_results = search_chunks(query_embedding, current_document_id)
-        answer = generate_answer(question, search_results)
+        answer, usage = generate_answer(question, search_results)
         groundedness = evaluate_groundedness(question, answer, search_results)
         relevance = evaluate_relevance(question, answer)
         hallucination_risk = classify_hallucination_risk(groundedness)
@@ -117,6 +117,11 @@ if uploaded_file is not None:
 
         st.subheader("Performance")
         st.write("Latency:", round(latency, 2), "seconds")
+
+        if usage is not None:
+            st.write("Input tokens:", usage.input_tokens)
+            st.write("Output tokens:", usage.output_tokens)
+            st.write("Total tokens:", usage.total_tokens)
 
         st.subheader("Retrieved evidence")
 
