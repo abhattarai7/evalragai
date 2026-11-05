@@ -1,3 +1,4 @@
 streamlit
 pymupdf
 azure-search-documents
+azure-ai-contentsafety

@@ -7,7 +7,7 @@ from embeddings import embed_chunks, embed_query
 from search import upload_chunks, search_chunks
 from generation import generate_answer
 from evaluation import evaluate_groundedness, evaluate_relevance, classify_hallucination_risk
-
+from safety import analyze_safety
 
 def extract_text_from_pdf(uploaded_file):
     pdfbytes = uploaded_file.read()
@@ -101,6 +101,9 @@ if uploaded_file is not None:
         query_embedding = embed_query(question)
         search_results = search_chunks(query_embedding, current_document_id)
         answer, usage = generate_answer(question, search_results)
+
+        safety_results = analyze_safety(answer)
+
         groundedness = evaluate_groundedness(question, answer, search_results)
         relevance = evaluate_relevance(question, answer)
         hallucination_risk = classify_hallucination_risk(groundedness)
@@ -114,6 +117,11 @@ if uploaded_file is not None:
         st.write("Groundedness:", groundedness)
         st.write("Relevance:", relevance)
         st.write("Hallucination Risk:", hallucination_risk)
+
+        st.subheader("Content Safety")
+
+        for result in safety_results:
+            st.write(result.category, ":", result.severity)
 
         st.subheader("Performance")
         st.write("Latency:", round(latency, 2), "seconds")
