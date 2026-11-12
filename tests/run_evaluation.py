@@ -1,9 +1,17 @@
 import json
+import hashlib
 from pathlib import Path
 
 from embeddings import embed_query
 from search import search_chunks
 from generation import generate_answer
+
+handbook_path = Path("test_data/evalrag_employee_handbook.pdf")
+
+pdf_bytes = handbook_path.read_bytes()
+document_id = hashlib.sha256(pdf_bytes).hexdigest()
+
+print("Testing document:", document_id[:12])
 
 dataset_Path = Path(__file__).parent / "eval_dataset.json"
 
@@ -18,14 +26,32 @@ def check_correctness(answer, expected_answer, answerable):
 
     return expected_answer.lower() in answer.lower()
 
+correct_count = 0 
+
 for test in test_cases:
     question = test["question"]
 
     query_embedding = embed_query(question)
-    search_results = search_chunks(query_embedding)
+    search_results = search_chunks(query_embedding, document_id)
     answer, usage = generate_answer(question, search_results)
+
+    is_correct = check_correctness(
+        answer,
+        test["expected_answer"],
+        test["answerable"]
+    )
 
     print("\nQuestion:", question)
     print("AI Answer:", answer)
     print("Expected Answer:", test["expected_answer"])
+    print("Correct:", is_correct)
 
+    if is_correct:
+        correct_count += 1
+
+total_questions = len(test_cases)
+pass_rate = (correct_count / total_questions) * 100
+
+print("\nEvaluation Summary")
+print("Correct answers:", correct_count, "/", total_questions)
+print("Exact-phrase pass rate:", round(pass_rate, 2), "%")
