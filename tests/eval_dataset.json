@@ -1,0 +1,52 @@
+[
+  {
+    "question": "How many paid vacation days do full-time employees receive?",
+    "expected_answer": "15 paid vacation days per calendar year",
+    "answerable": true
+  },
+  {
+    "question": "How many days per week can hybrid employees work remotely?",
+    "expected_answer": "Up to 2 days per week",
+    "answerable": true
+  },
+  {
+    "question": "How quickly must suspected security incidents be reported?",
+    "expected_answer": "No later than 4 hours after discovery",
+    "answerable": true
+  },
+  {
+    "question": "What is the daily meal expense limit for approved business travel?",
+    "expected_answer": "$75 per day",
+    "answerable": true
+  },
+  {
+    "question": "What is the CEO's annual salary?",
+    "expected_answer": null,
+    "answerable": false
+  },
+  {
+  "question": "How many paid sick days do full-time employees receive?",
+  "expected_answer": "10 paid sick days per calendar year",
+  "answerable": true
+},
+{
+  "question": "When are receipts required for business expenses?",
+  "expected_answer": "For individual expenses of $25 or more",
+  "answerable": true
+},
+{
+  "question": "Can employees enter passwords into public AI services?",
+  "expected_answer": "No, passwords must not be entered into public AI services",
+  "answerable": true
+},
+{
+  "question": "What is the maximum number of unused vacation days employees can carry over?",
+  "expected_answer": "5 days",
+  "answerable": true
+},
+{
+  "question": "What is the company's stock price?",
+  "expected_answer": null,
+  "answerable": false
+}
+]
