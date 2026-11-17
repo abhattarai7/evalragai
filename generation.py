@@ -1,3 +1,5 @@
+import ssl
+import httpx2
 from openai import OpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
@@ -8,9 +10,15 @@ token_provider = get_bearer_token_provider(
     "https://ai.azure.com/.default"
 )
 
+tls_context = ssl.create_default_context()
+tls_context.maximum_version = ssl.TLSVersion.TLSv1_2
+
+http_client = httpx2.Client(verify=tls_context)
+
 client = OpenAI(
     base_url=endpoint,
-    api_key=token_provider
+    api_key=token_provider,
+    http_client=http_client
 )
 
 def generate_answer(question, search_results):

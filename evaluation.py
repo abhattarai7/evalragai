@@ -46,6 +46,29 @@ def evaluate_relevance(question, answer):
 
     return response.output_text.strip()
 
+def evaluate_correctness(question, answer, expected_answer):
+    response = client.responses.create(
+        model="gpt-5.4-mini-1",
+        instructions=(
+            "You are an AI answer correctness evaluator. "
+            "Compare the AI-generated answer with the expected answer. "
+            "Focus on factual meaning rather than exact wording. "
+            "Return CORRECT if both answers communicate the same factual information. "
+            "Return INCORRECT if the answer contradicts the expected answer "
+            "or fails to provide the required information. "
+            "Treat equivalent expressions such as '2 days' and 'two days' as equal. "
+            "Return only one label: CORRECT or INCORRECT."
+        ),
+        input=(
+            f"Question:\n{question}\n\n"
+            f"Expected answer:\n{expected_answer}\n\n"
+            f"AI answer:\n{answer}"
+        ),
+        max_output_tokens=300
+    )
+
+    return response.output_text.strip()
+
 def classify_hallucination_risk(groundedness):
     if groundedness == "SUPPORTED":
         return "LOW"
@@ -91,4 +114,14 @@ if __name__ == "__main__":
     print("Partially relevant:", evaluate_relevance(
         "How many vacation days do employees receive, and how many can carry over?",
         "Employees receive 15 paid vacation days."
+    ))
+    print("Semantic correct:", evaluate_correctness(
+    "How many days can employees work remotely?",
+    "Employees can work remotely two days per week.",
+    "Up to 2 days per week"
+    ))
+    print("Semantic incorrect:", evaluate_correctness(
+        "How many vacation days do employees receive?",
+        "Employees receive 25 vacation days.",
+        "15 vacation days"
     ))

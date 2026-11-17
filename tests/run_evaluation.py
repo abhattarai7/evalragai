@@ -6,6 +6,8 @@ from embeddings import embed_query
 from search import search_chunks
 from generation import generate_answer
 
+from evaluation import evaluate_correctness
+
 handbook_path = Path("test_data/evalrag_employee_handbook.pdf")
 
 pdf_bytes = handbook_path.read_bytes()
@@ -28,6 +30,8 @@ def check_correctness(answer, expected_answer, answerable):
 
 correct_count = 0 
 
+semantic_correct_count = 0
+
 for test in test_cases:
     question = test["question"]
 
@@ -41,6 +45,17 @@ for test in test_cases:
         test["answerable"]
     )
 
+    if test["answerable"]:
+        semantic_result = evaluate_correctness(
+            question,
+            answer,
+            test["expected_answer"]
+        )
+    else:
+        semantic_result = (
+            "CORRECT" if is_correct else "INCORRECT"
+        )
+
     print("\nQuestion:", question)
     print("AI Answer:", answer)
     print("Expected Answer:", test["expected_answer"])
@@ -49,9 +64,16 @@ for test in test_cases:
     if is_correct:
         correct_count += 1
 
+    if semantic_result == "CORRECT":
+        semantic_correct_count += 1
+
 total_questions = len(test_cases)
 pass_rate = (correct_count / total_questions) * 100
+semantic_pass_rate = (semantic_correct_count / total_questions) * 100
 
 print("\nEvaluation Summary")
 print("Correct answers:", correct_count, "/", total_questions)
 print("Exact-phrase pass rate:", round(pass_rate, 2), "%")
+
+print("Semantic correct answers:", semantic_correct_count, "/", total_questions)
+print("Semantic correctness rate:", round(semantic_pass_rate, 2), "%")
