@@ -55,7 +55,7 @@ st.write(
 
 uploaded_file = st.file_uploader(
     "Upload a document",
-    type = ["pdf", "text"]
+    type = ["pdf"]
 )
 
 if "document_id" not in st.session_state:
@@ -114,36 +114,47 @@ if uploaded_file is not None:
         st.write(answer)
 
         st.subheader("AI Evaluation")
-        st.write("Groundedness:", groundedness)
-        st.write("Relevance:", relevance)
-        st.write("Hallucination Risk:", hallucination_risk)
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric("Groundedness", groundedness)
+
+        with col2:
+            st.metric("Relevance", relevance)
+
+        with col3:
+            st.metric("Hallucination Risk", hallucination_risk)
 
         st.subheader("Content Safety")
 
-        for result in safety_results:
-            st.write(result.category, ":", result.severity)
+        safety_cols = st.columns(4)
+
+        for i, result in enumerate(safety_results):
+            with safety_cols[i]:
+                st.metric(result.category, result.severity)
 
         st.subheader("Performance")
-        st.write("Latency:", round(latency, 2), "seconds")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric("Response Time", f"{latency:.2f} sec")
+
+        with col2:
+            if usage is not None:
+                st.metric("Total Tokens", usage.total_tokens)
 
         if usage is not None:
-            st.write("Input tokens:", usage.input_tokens)
-            st.write("Output tokens:", usage.output_tokens)
-            st.write("Total tokens:", usage.total_tokens)
+            col3, col4 = st.columns(2)
 
-        st.subheader("Retrieved evidence")
+            with col3:
+                st.metric("Input Tokens", usage.input_tokens)
 
-        for result in search_results:
-            st.write(result["content"])
+            with col4:
+                st.metric("Output Tokens", usage.output_tokens)
 
-    st.write("Number of chunks:", len(chunks))
-    st.write("Number of embeddings:", len(embeddings))
-    st.write("Embedding dimensions:", len(embeddings[0]))
-
-    st.subheader("Extracted Text Preview")
-    st.text(extracted_text[:2000])
-    st.write("Numbers of chunks", len(chunks))
-    st.subheader("Chunk 1")
-    st.text(chunks[0])
-    st.subheader("Chunk 2")
-    st.text(chunks[1])
+        with st.expander("View Retrieved Evidence"):
+            for i, result in enumerate(search_results, start=1):
+                st.markdown(f"**Source Chunk {i}**")
+                st.write(result["content"])
